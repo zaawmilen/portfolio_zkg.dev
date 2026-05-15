@@ -350,6 +350,11 @@ footer span{color:var(--text-muted)}
   .proj-grid{grid-template-columns:1fr}
   .proj-card.featured{grid-column:auto}
   .hero-stats{gap:1.5rem}
+  #engineering > div,#skills{padding-left:1.25rem;padding-right:1.25rem}
+  #engineering > div > div[style*="grid-template-columns:1fr 1fr"],
+  #skills > div[style*="grid-template-columns:1fr 1fr 1fr"]{
+    grid-template-columns:1fr !important
+  }
 }
 </style>
 </head>
@@ -362,6 +367,8 @@ footer span{color:var(--text-muted)}
     <a href="#about">About</a>
     <a href="#experience">Experience</a>
     <a href="#projects">Projects</a>
+    <a href="#engineering">Engineering</a>
+    <a href="#skills">Skills</a>
     <a href="#contact">Contact</a>
   </div>
   <a href="mailto:zewdie.k@gmail.com" class="nav-cta">Get in touch</a>
@@ -592,11 +599,10 @@ footer span{color:var(--text-muted)}
         <span class="tech-tag">Transactions</span>
       </div>
       <div class="proj-links">
-        <a href="https://github.com/zaawmilen/Real-time-auction-system.git" class="proj-link">GitHub →</a>
-        <a href="https://real-time-auction-system-eight.vercel.app/" class="proj-link">Live demo →</a>
+        <a href="https://github.com/zaawmilen/Real-time-auction-system.git" class="proj-link" target="_blank" rel="noopener noreferrer">GitHub →</a>
+        <a href="https://real-time-auction-system-eight.vercel.app/" class="proj-link" target="_blank" rel="noopener noreferrer">Live demo →</a>
       </div>
     </div>
-   
 
     <div class="proj-card">
       <div class="proj-top">
@@ -615,8 +621,8 @@ footer span{color:var(--text-muted)}
         <span class="tech-tag">Vercel</span>
       </div>
       <div class="proj-links">
-        <a href="https://github.com/zaawmilen/NextHire.git" class="proj-link">GitHub →</a>
-        <a href="https://next-hire-3odp.vercel.app/" class="proj-link">Live demo →</a>
+        <a href="https://github.com/zaawmilen/NextHire.git" class="proj-link" target="_blank" rel="noopener noreferrer">GitHub →</a>
+        <a href="https://next-hire-3odp.vercel.app/" class="proj-link" target="_blank" rel="noopener noreferrer">Live demo →</a>
       </div>
     </div>
 
@@ -637,8 +643,153 @@ footer span{color:var(--text-muted)}
         <span class="tech-tag">Stripe</span>
       </div>
       <div class="proj-links">
-        <a href="https://github.com/zaawmilen/z-eva-forum.git" class="proj-link">GitHub →</a>
-        <a href="https://z-eccom2.netlify.app/" class="proj-link">Live demo →</a>
+        <a href="https://github.com/zaawmilen/z-amazon-deploy" class="proj-link" target="_blank" rel="noopener noreferrer">GitHub →</a>
+        <a href="https://z-eccom2.netlify.app/" class="proj-link" target="_blank" rel="noopener noreferrer">Live demo →</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ENGINEERING DECISIONS -->
+<div id="engineering" style="background:var(--bg-2);max-width:100%;border-top:1px solid var(--border);padding:100px 0">
+  <div style="max-width:1100px;margin:0 auto;padding:0 2.5rem">
+    <div class="section-label">04 — Engineering Approach</div>
+    <h2>How I build systems</h2>
+    <div class="section-divider"></div>
+    <p style="color:var(--text-muted);font-size:.95rem;line-height:1.8;max-width:600px;margin-bottom:3.5rem">
+      I approach development by thinking through failure modes, trade-offs, and scale before writing
+      the first line. These aren't principles I read about — they're decisions I've had to make in
+      real systems.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;border-top:2px solid var(--accent)">
+        <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.5rem">Data Consistency & Concurrency</div>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.8;margin-bottom:1.25rem">
+          In the auction system, multiple users can submit bids simultaneously. A naive implementation
+          would process them in sequence and allow two bids to "win" the same item. I used
+          <strong style="color:var(--text)">PostgreSQL SELECT FOR UPDATE</strong> inside a serialised
+          transaction to lock the auction row during bid evaluation — so only one bid can commit,
+          and the rest fail gracefully with a clear error.
+        </p>
+        <div style="font-size:12px;color:var(--accent);font-family:'JetBrains Mono',monospace">
+          Decision: correctness over throughput — serialise writes, not reads
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;border-top:2px solid var(--blue)">
+        <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.5rem">Real-Time State Consistency</div>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.8;margin-bottom:1.25rem">
+          WebSockets are stateful — when a client reconnects, it may have missed events. I implemented
+          <strong style="color:var(--text)">server-authoritative state</strong>: on reconnect, the
+          client re-fetches the full current state rather than replaying events. This avoids
+          divergence between server truth and client UI without needing a full event-sourcing
+          architecture.
+        </p>
+        <div style="font-size:12px;color:var(--blue);font-family:'JetBrains Mono',monospace">
+          Trade-off: higher reconnect bandwidth vs. guaranteed consistency
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;border-top:2px solid var(--green)">
+        <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.5rem">API Design & Reliability</div>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.8;margin-bottom:1.25rem">
+          I design mutation endpoints to be <strong style="color:var(--text)">idempotent</strong>
+          wherever possible — if a client retries a failed request, it shouldn't create duplicate
+          records or corrupt state. For bid submission, a unique constraint on
+          <code style="font-size:12px;background:var(--bg-3);padding:1px 6px;border-radius:4px">(user_id, auction_id, amount)</code>
+          means retries are safe. Errors return structured, actionable responses — not raw 500s.
+        </p>
+        <div style="font-size:12px;color:var(--green);font-family:'JetBrains Mono',monospace">
+          Decision: design for retry-safety from day one
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;border-top:2px solid #a78bfa">
+        <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.5rem">Performance & Query Optimisation</div>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.8;margin-bottom:1.25rem">
+          In professional work, I identified slow API responses caused by N+1 query patterns — a
+          loop fetching related records one at a time. Refactoring to <strong style="color:var(--text)">JOIN-based queries
+          with targeted indexes</strong> on foreign keys reduced response times by ~20% on the
+          affected endpoints. I also applied Redis caching to read-heavy, infrequently-changing
+          data to reduce DB load at peak usage.
+        </p>
+        <div style="font-size:12px;color:#a78bfa;font-family:'JetBrains Mono',monospace">
+          ~20% API response improvement · eliminated N+1 patterns
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-label">05 — Skills</div>
+  <h2>Technical toolkit</h2>
+  <div class="section-divider"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem">
+
+    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.25rem">Core Technologies</div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.06em">Frontend</div>
+        <div class="tech-stack" style="margin-top:0">
+          <span class="tech-tag">TypeScript</span>
+          <span class="tech-tag">React</span>
+          <span class="tech-tag">Next.js</span>
+          <span class="tech-tag">JavaScript</span>
+          <span class="tech-tag">HTML/CSS</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.06em">Backend</div>
+        <div class="tech-stack" style="margin-top:0">
+          <span class="tech-tag">Node.js</span>
+          <span class="tech-tag">Express</span>
+          <span class="tech-tag">REST APIs</span>
+          <span class="tech-tag">GraphQL</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.25rem">Systems & Architecture</div>
+      <div class="tech-stack" style="margin-top:0">
+        <span class="tech-tag">WebSockets</span>
+        <span class="tech-tag">Event-driven arch.</span>
+        <span class="tech-tag">Concurrency control</span>
+        <span class="tech-tag">DB transactions</span>
+        <span class="tech-tag">RBAC</span>
+        <span class="tech-tag">Auth / JWT</span>
+        <span class="tech-tag">API idempotency</span>
+        <span class="tech-tag">N+1 elimination</span>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.25rem">Data & Deployment</div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.06em">Databases</div>
+        <div class="tech-stack" style="margin-top:0">
+          <span class="tech-tag">PostgreSQL</span>
+          <span class="tech-tag">MongoDB</span>
+          <span class="tech-tag">Redis</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.06em">Tools & Cloud</div>
+        <div class="tech-stack" style="margin-top:0">
+          <span class="tech-tag">AWS</span>
+          <span class="tech-tag">GitHub Actions</span>
+          <span class="tech-tag">Docker</span>
+          <span class="tech-tag">Vercel</span>
+          <span class="tech-tag">Postman</span>
+          <span class="tech-tag">Git</span>
+        </div>
       </div>
     </div>
 
@@ -648,7 +799,7 @@ footer span{color:var(--text-muted)}
 <!-- CONTACT -->
 <div id="contact">
   <div class="inner">
-    <div class="section-label">04 — Contact</div>
+    <div class="section-label">06 — Contact</div>
     <h2>Let's work together</h2>
     <div class="section-divider"></div>
     <div class="contact-grid">
@@ -704,8 +855,6 @@ footer span{color:var(--text-muted)}
 <footer>
   <span>Zewdie K. Gebrehiwot</span> — Full-Stack Developer · Built from scratch, no templates
 </footer>
-
-
 
 <script>
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
